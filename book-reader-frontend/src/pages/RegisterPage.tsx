@@ -7,11 +7,15 @@ const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const [error, setError] = useState("");
+
   const navigate = useNavigate();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
     try {
       await axios.post("http://localhost:8080/api/users", {
         username,
@@ -19,10 +23,22 @@ const RegisterPage: React.FC = () => {
         password,
       });
 
-      toast.success("✅ Account registered!");
+      toast.success("Account registered!");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err: any) {
-      setError("Registration failed. Email or username might already be in use.");
+      if (err.response && err.response.status === 400 && err.response.data) {
+        const data = err.response.data;
+
+        if (data.password) {
+          setError(data.password);
+        } else if (data.error) {
+          setError(data.error);
+        } else {
+          setError("Registration failed due to validation error.");
+        }
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -33,7 +49,8 @@ const RegisterPage: React.FC = () => {
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm"
       >
         <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
+
+        {error && <p className="text-red-500 mb-4 text-sm text-center">{error}</p>}
 
         <div className="mb-4">
           <label className="block mb-1 font-medium">Username</label>
@@ -70,10 +87,11 @@ const RegisterPage: React.FC = () => {
 
         <button
           type="submit"
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700"
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
         >
           Register
         </button>
+
         <p className="mt-4 text-center text-sm">
           Already have an account?{" "}
           <span

@@ -75,4 +75,23 @@ export const updateBookStatus = async (
 
   return response.data; // Axios automatically parses JSON response
 };
-// --- END NEW: updateBookStatus function ---
+
+export const getBookPrice = async (
+  token: string,
+  isbn: string,
+  country: string
+): Promise<{
+  saleability: string;
+  listPrice?: { amount: number; currencyCode: string };
+  retailPrice?: { amount: number; currencyCode: string };
+  buyLink?: string;
+}> => {
+  const response = await axios.get(`${BASE_URL}/external/books/price`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    params: { isbn, country },
+  });
+
+  return response.data;
+};

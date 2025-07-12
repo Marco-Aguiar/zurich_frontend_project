@@ -6,6 +6,5 @@ export const statusLabels: Record<BookStatus, string> = {
   PAUSED: "Paused",
   READ: "Read",
   DROPPED: "Dropped",
-  WISHLIST: "Wishlist",
   RECOMMENDED: "Recommended",
 };

@@ -16,9 +16,7 @@ const STATUS_ORDER: BookStatus[] = [
   "RECOMMENDED",
 ];
 
-// Todos os status possíveis
 const ALL_POSSIBLE_STATUSES: BookStatus[] = [
-  "WISHLIST",
   "PLAN_TO_READ",
   "READING",
   "PAUSED",
@@ -73,8 +71,6 @@ const HomePage: React.FC = () => {
         return "bg-orange-200 text-orange-800";
       case "DROPPED":
         return "bg-red-200 text-red-800";
-      case "WISHLIST":
-        return "bg-purple-200 text-purple-800";
       case "RECOMMENDED":
         return "bg-pink-200 text-pink-800";
       default:
@@ -109,9 +105,7 @@ const HomePage: React.FC = () => {
     }
   };
 
-  const filteredBooks = books.filter(book => book.status !== "WISHLIST");
-
-  const groupedBooks = filteredBooks.reduce((acc, book) => {
+  const groupedBooks = books.reduce((acc, book) => {
     const status: BookStatus = book.status;
     if (!acc[status]) acc[status] = [];
     acc[status].push(book);

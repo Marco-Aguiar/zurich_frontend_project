@@ -1,5 +1,5 @@
 export type BookStatus =
-  | "WISHLIST"
+
   | "PLAN_TO_READ"
   | "READING"
   | "PAUSED"
@@ -12,6 +12,7 @@ export interface Book {
   title: string;
   authors: string[];
   thumbnailUrl?: string;
-  status: BookStatus; 
-  googleBookId?: string; 
+  subject?: string;
+  status: BookStatus;
+  googleBookId?: string;
 }

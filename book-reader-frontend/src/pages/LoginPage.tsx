@@ -19,10 +19,10 @@ const LoginPage: React.FC = () => {
       const { token } = response.data;
       localStorage.setItem("token", token);
 
-      toast.success("✅ Welcome back!");
+      toast.success("Welcome back!");
       setTimeout(() => navigate("/"), 2000);
     } catch (err: any) {
-      toast.error("❌ Invalid credentials or server error.");
+      toast.error("Invalid credentials or server error.");
     }
   };
 
