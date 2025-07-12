@@ -20,10 +20,12 @@ export const addToCollection = async (
     subject: string;
     authors: string[];
     thumbnailUrl: string;
-    status: string; // Consider using BookStatus here as well for type safety
+    averageRating?: number | null;
+    status: string;
   }
+
 ) => {
-  // Keeping fetch for consistency with your existing code, but could switch to axios
+
   const response = await fetch(`${BASE_URL}/book-entries`, {
     method: "POST",
     headers: {
@@ -34,7 +36,6 @@ export const addToCollection = async (
   });
 
   if (!response.ok) {
-    // You might want to parse the error response from backend for more specific messages
     const errorBody = await response.json().catch(() => ({ message: 'Unknown error' }));
     throw new Error(errorBody.message || "Failed to add book");
   }

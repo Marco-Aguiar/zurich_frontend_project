@@ -38,6 +38,20 @@ const BookCard: React.FC<BookCardProps> = ({
       <h3 className="text-md font-semibold truncate w-full">{book.title}</h3>
       <p className="text-gray-500 text-sm truncate w-full">{formatAuthors(book.authors)}</p>
 
+      {/* ⭐ Average Rating */}
+      {typeof book.averageRating === "number" && !isNaN(book.averageRating) && (
+        <p className="text-sm text-yellow-600 font-semibold mt-1">
+          ⭐ {book.averageRating.toFixed(1)} / 5
+        </p>
+      )}
+
+      {/* 📊 Ratings Count */}
+      {typeof book.ratingsCount === "number" && book.ratingsCount > 0 && (
+        <p className="text-xs text-gray-500">
+          ({book.ratingsCount} ratings)
+        </p>
+      )}
+
       <div className="mt-3 w-full">
         <StatusDropdown
           currentStatus={book.status}

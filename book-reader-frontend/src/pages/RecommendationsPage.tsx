@@ -4,8 +4,6 @@ import { addToCollection } from "../services/BookService";
 
 const CATEGORY_OPTIONS = [
   "Art",
-  "Biography & Autobiography",
-  "Business & Economics",
   "Children",
   "Drama",
   "Education",
@@ -13,7 +11,6 @@ const CATEGORY_OPTIONS = [
   "History",
   "Medical",
   "Philosophy",
-  "Political Science",
   "Religion",
   "Science",
   "Travel",
@@ -88,6 +85,7 @@ const RecommendationsPage: React.FC = () => {
         authors: book.authors || ["Unknown Author"],
         subject: book.subject || "Unknown",
         thumbnailUrl: book.thumbnailUrl || "",
+        averageRating: book.averageRating || null,
         status: "PLAN_TO_READ",
       });
       toast.success("Book added to your collection!");
@@ -109,7 +107,7 @@ const RecommendationsPage: React.FC = () => {
           <label className="mb-1 text-sm font-medium text-gray-700">Title</label>
           <input
             type="text"
-            placeholder="e.g. The Hobbit"
+            placeholder="example: Lord of the Rings"
             className="border p-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -174,11 +172,27 @@ const RecommendationsPage: React.FC = () => {
 
             <h3 className="text-md font-semibold mb-1 truncate w-full">{book.title}</h3>
             <p className="text-sm text-gray-600 truncate w-full">
-              {book.authors?.join(", ") || "Unknown Author"}
+              {Array.isArray(book.authors)
+                ? book.authors.join(", ")
+                : typeof book.authors === "string"
+                  ? book.authors
+                  : "Unknown Author"}
             </p>
-            <p className="text-sm text-gray-500 w-full mb-2">
+            <p className="text-sm text-gray-500 w-full">
               <strong>Subject:</strong> {book.subject}
             </p>
+
+            {typeof book.averageRating === "number" && !isNaN(book.averageRating) && (
+              <p className="text-sm text-yellow-600 font-semibold">
+                ⭐ {book.averageRating.toFixed(1)} / 5
+              </p>
+            )}
+
+            {typeof book.ratingsCount === "number" && book.ratingsCount > 0 && (
+              <p className="text-xs text-gray-500">
+                ({book.ratingsCount} ratings)
+              </p>
+            )}
 
             <button
               onClick={() => handleAddToCollection(book)}

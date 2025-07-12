@@ -15,4 +15,7 @@ export interface Book {
   subject?: string;
   status: BookStatus;
   googleBookId?: string;
+  averageRating?: number;
+  ratingsCount?: number;
 }
+

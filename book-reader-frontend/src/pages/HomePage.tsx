@@ -6,7 +6,6 @@ import { toast } from "react-toastify";
 import BookGroup from "../components/BookGroup";
 import { statusLabels } from "../utils/statusLabels";
 
-// Ordem dos status exibidos
 const STATUS_ORDER: BookStatus[] = [
   "PLAN_TO_READ",
   "READING",
@@ -104,7 +103,6 @@ const HomePage: React.FC = () => {
       setBooks(originalBooks);
     }
   };
-
   const groupedBooks = books.reduce((acc, book) => {
     const status: BookStatus = book.status;
     if (!acc[status]) acc[status] = [];

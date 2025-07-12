@@ -54,8 +54,11 @@ const SearchPage: React.FC = () => {
         authors: book.authors || ["Unknown Author"],
         subject: book.subject || "Unknown",
         thumbnailUrl: book.thumbnailUrl || "",
+        averageRating: book.averageRating || null,
         status: "PLAN_TO_READ",
       });
+
+
       toast.success("Book added to your collection!");
     } catch (err) {
       toast.error("Failed to add book.");
@@ -122,13 +125,29 @@ const SearchPage: React.FC = () => {
               </div>
             )}
 
-            <h3 className="text-md font-semibold mb-1 truncate w-full">{book.title}</h3>
+            <h3 className="text-md font-semibold mb-1 truncate w-full">
+              {book.title}
+            </h3>
             <p className="text-sm text-gray-600 truncate w-full">
               {book.authors?.join(", ") || "Unknown Author"}
             </p>
             <p className="text-sm text-gray-500 w-full">
               <strong>Subject:</strong> {book.subject || "Unknown"}
             </p>
+
+            {typeof book.averageRating === "number" &&
+              !isNaN(book.averageRating) && (
+                <p className="text-sm text-yellow-600 font-semibold">
+                  ⭐ {book.averageRating.toFixed(1)} / 5
+                </p>
+              )}
+
+            {typeof book.ratingsCount === "number" &&
+              book.ratingsCount > 0 && (
+                <p className="text-sm text-gray-500">
+                  ({book.ratingsCount} ratings)
+                </p>
+              )}
 
             <button
               onClick={() => handleAddToCollection(book)}
