@@ -35,9 +35,11 @@ const BookCard: React.FC<BookCardProps> = ({
           e.stopPropagation();
           onRemoveBook();
         }}
-        className="absolute top-2 right-2 text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full bg-white bg-opacity-70 hover:bg-opacity-100"
-        aria-label="Remove book"
+        className="absolute top-2 right-2 text-gray-500 hover:text-red-600 transition-colors p-1 rounded-full bg-white bg-opacity-70 hover:bg-opacity-100 text-xl font-bold leading-none"
+        aria-label="Remover livro"
+        title="Remover livro"
       >
+        ×
       </button>
 
       {book.thumbnailUrl ? (
@@ -67,7 +69,7 @@ const BookCard: React.FC<BookCardProps> = ({
 
       <div
         className="mt-3 w-full"
-        onClick={(e) => e.stopPropagation()} 
+        onClick={(e) => e.stopPropagation()}
       >
         <StatusDropdown
           currentStatus={book.status}
@@ -79,6 +81,5 @@ const BookCard: React.FC<BookCardProps> = ({
     </div>
   );
 };
-
 
 export default BookCard;

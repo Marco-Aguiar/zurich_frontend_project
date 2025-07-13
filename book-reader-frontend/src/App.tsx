@@ -7,7 +7,6 @@ import SearchPage from "./pages/SearchPage";
 import RecommendationsPage from "./pages/RecommendationsPage";
 import PrivateRoute from "./components/PrivateRoute";
 import { ToastContainer } from "react-toastify";
-import PricePage from "./pages/PricePage";
 
 function App() {
   return (
@@ -19,7 +18,6 @@ function App() {
 
         <Route path="/" element={<PrivateRoute><HomePage /></PrivateRoute>} />
         <Route path="/search" element={<PrivateRoute><SearchPage /></PrivateRoute>} />
-        <Route path="/price" element={<PrivateRoute><PricePage /></PrivateRoute>} />
         <Route path="/recommendations" element={<PrivateRoute><RecommendationsPage /></PrivateRoute>} />
       </Routes>
 

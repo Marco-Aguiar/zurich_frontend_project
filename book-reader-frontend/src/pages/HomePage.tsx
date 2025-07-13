@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Book, BookStatus } from "../types/Book";
-import { getAllBooks, updateBookStatus, removeBook } from "../services/BookService";
+import { getAllBooks, updateBookStatus, removeBook, getBookDetails } from "../services/BookService";
 import { toast } from "react-toastify";
 import BookGroup from "../components/BookGroup";
 import { statusLabels } from "../utils/statusLabels";
@@ -114,6 +114,30 @@ const HomePage: React.FC = () => {
     }
   };
 
+  const handleCardClick = async (book: Book) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Você precisa estar logado.");
+      navigate("/login");
+      return;
+    }
+
+    if (!book.googleBookId) {
+      toast.error("ID do livro não disponível para carregar detalhes.");
+      setSelectedBook(book);
+      return;
+    }
+
+    try {
+      const details = await getBookDetails(token, book.googleBookId);
+      const detailedBook = { ...book, ...details };
+      setSelectedBook(detailedBook);
+    } catch (error: any) {
+      toast.error(error.message || "Erro ao carregar detalhes do livro.");
+      setSelectedBook(book);
+    }
+  };
+
   const groupedBooks = books.reduce((acc, book) => {
     const status: BookStatus = book.status;
     if (ALL_POSSIBLE_STATUSES.includes(status)) {
@@ -142,7 +166,15 @@ const HomePage: React.FC = () => {
             <p className="text-lg mb-1">Discover your next favorite book.</p>
             <p className="text-md">Track your reading progress, manage wishlists, and add comments to your books.</p>
             <p className="text-md mt-4">
-              Start by <strong className="text-blue-600">searching</strong> for books and adding them to your collection!
+              Start by{" "}
+              <button
+                onClick={() => navigate("/search")}
+                className="text-blue-600 font-semibold focus:outline-none cursor-pointer"
+                style={{ textDecoration: "none" }}
+              >
+                Searching
+              </button>{" "}
+              for books and adding them to your collection!
             </p>
           </div>
         ) : (
@@ -160,7 +192,7 @@ const HomePage: React.FC = () => {
                   onRemoveBook={handleRemoveBook}
                   getStatusColor={getStatusColor}
                   allStatuses={ALL_POSSIBLE_STATUSES}
-                  onCardClick={(book) => setSelectedBook(book)}
+                  onCardClick={handleCardClick}
                 />
               );
             })}

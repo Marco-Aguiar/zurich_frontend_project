@@ -25,7 +25,6 @@ const Header: React.FC = () => {
                     <NavLink to="/" className={navClass}>Home</NavLink>
                     <NavLink to="/search" className={navClass}>Search</NavLink>
                     <NavLink to="/recommendations" className={navClass}>Recommendations</NavLink>
-                    <NavLink to="/price" className={navClass}>Price</NavLink>
                 </nav>
 
                 <button
