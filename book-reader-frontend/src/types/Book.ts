@@ -1,5 +1,4 @@
 export type BookStatus =
-
   | "PLAN_TO_READ"
   | "READING"
   | "PAUSED"
@@ -17,5 +16,11 @@ export interface Book {
   googleBookId?: string;
   averageRating?: number;
   ratingsCount?: number;
-}
 
+  // Novos campos para o modal de detalhes
+  description?: string;
+  publisher?: string;
+  publishedDate?: string;
+  categories?: string[];
+  infoLink?: string;
+}

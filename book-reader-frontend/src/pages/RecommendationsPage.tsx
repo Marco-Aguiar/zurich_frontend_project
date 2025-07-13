@@ -64,7 +64,6 @@ const RecommendationsPage: React.FC = () => {
         toast.error("Failed to get recommendations.");
       }
     } catch (err) {
-      console.error(err);
       toast.error("Something went wrong. Try again.");
     } finally {
       setLoading(false);
@@ -88,9 +87,20 @@ const RecommendationsPage: React.FC = () => {
         averageRating: book.averageRating || null,
         status: "PLAN_TO_READ",
       });
-      toast.success("Book added to your collection!");
-    } catch (err) {
-      toast.error("Failed to add book.");
+      toast.success("📚 Book added to your collection!");
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const errorMessage = err?.response?.data?.error;
+
+      if (
+        status === 400 &&
+        errorMessage?.toLowerCase().includes("already") &&
+        errorMessage?.toLowerCase().includes("saved")
+      ) {
+        toast.warn("You’ve already added this book to your collection.");
+      } else {
+        toast.error(errorMessage || "Failed to add book. Please try again.");
+      }
     }
   };
 
@@ -107,7 +117,7 @@ const RecommendationsPage: React.FC = () => {
           <label className="mb-1 text-sm font-medium text-gray-700">Title</label>
           <input
             type="text"
-            placeholder="example: Lord of the Rings"
+            placeholder="Example: Trivium"
             className="border p-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -136,7 +146,7 @@ const RecommendationsPage: React.FC = () => {
         </div>
 
         <button
-          className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition h-fit"
+          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition h-fit"
           onClick={handleRecommend}
           disabled={loading}
         >
@@ -162,10 +172,14 @@ const RecommendationsPage: React.FC = () => {
               <img
                 src={book.thumbnailUrl}
                 alt={book.title}
-                className="w-full aspect-[2/3] object-cover rounded mb-4 shadow"
+                // CLASSE ATUALIZADA AQUI
+                className="w-full h-56 object-contain rounded-lg shadow mb-3"
               />
             ) : (
-              <div className="w-full aspect-[2/3] bg-gray-200 rounded mb-4 flex items-center justify-center text-gray-500">
+              <div
+                // CLASSE ATUALIZADA AQUI
+                className="w-full h-56 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-500"
+              >
                 No Image
               </div>
             )}
@@ -175,8 +189,8 @@ const RecommendationsPage: React.FC = () => {
               {Array.isArray(book.authors)
                 ? book.authors.join(", ")
                 : typeof book.authors === "string"
-                  ? book.authors
-                  : "Unknown Author"}
+                ? book.authors
+                : "Unknown Author"}
             </p>
             <p className="text-sm text-gray-500 w-full">
               <strong>Subject:</strong> {book.subject}

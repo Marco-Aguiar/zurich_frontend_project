@@ -1,5 +1,5 @@
 import axios from "axios";
-import { Book, BookStatus } from "../types/Book"; // Import BookStatus
+import { Book, BookStatus } from "../types/Book";
 
 const BASE_URL = "http://localhost:8080/api";
 
@@ -23,24 +23,39 @@ export const addToCollection = async (
     averageRating?: number | null;
     status: string;
   }
-
 ) => {
-
-  const response = await fetch(`${BASE_URL}/book-entries`, {
-    method: "POST",
+  const response = await axios.post(`${BASE_URL}/book-entries`, bookData, {
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(bookData),
   });
+  return response.data;
+};
 
-  if (!response.ok) {
-    const errorBody = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(errorBody.message || "Failed to add book");
+export const removeBook = async (token: string, bookId: string): Promise<void> => {
+  const response = await axios.delete(`${BASE_URL}/book-entries/${bookId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  
+  if (response.status !== 204 && response.status !== 200) {
+      throw new Error("Failed to delete book: Unexpected status code.");
   }
+};
 
-  return response.json();
+export const getBookDetails = async (token: string, googleBookId: string): Promise<any> => {
+  try {
+    const response = await axios.get(`${BASE_URL}/external/books/${googleBookId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Error fetching Google Book details:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Failed to fetch book details from Google Books API.");
+  }
 };
 
 export const searchBooks = async (
@@ -62,19 +77,19 @@ export const searchBooks = async (
 
 export const updateBookStatus = async (
   token: string,
-  bookId: string, // Assuming bookId is a string (UUID) or number (Long) from your backend
-  newStatus: BookStatus // Use the BookStatus type for type safety
-): Promise<Book> => { // Assuming the backend returns the updated Book object
+  bookId: string,
+  newStatus: BookStatus
+): Promise<Book> => {
   const response = await axios.patch(`${BASE_URL}/book-entries/${bookId}/status`, null, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    params: { // Send status as a request parameter, matching your Spring Boot controller
+    params: {
       status: newStatus
     }
   });
 
-  return response.data; // Axios automatically parses JSON response
+  return response.data;
 };
 
 export const getBookPrice = async (

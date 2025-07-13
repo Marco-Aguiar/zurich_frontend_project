@@ -17,7 +17,7 @@ const SearchPage: React.FC = () => {
     }
 
     if (!title && !author) {
-      toast.warn("🔍 Please fill in at least one search field.");
+      toast.warn("Please fill in at least one search field.");
       return;
     }
 
@@ -32,7 +32,7 @@ const SearchPage: React.FC = () => {
       }));
 
       setResults(formattedResults);
-    } catch (err) {
+    } catch {
       toast.error("Search failed. Please try again.");
       setResults([]);
     } finally {
@@ -57,11 +57,18 @@ const SearchPage: React.FC = () => {
         averageRating: book.averageRating || null,
         status: "PLAN_TO_READ",
       });
-
-
-      toast.success("Book added to your collection!");
-    } catch (err) {
-      toast.error("Failed to add book.");
+      toast.success("📚 Book added to your collection!");
+    } catch (err: any) {
+      if (
+        err?.response?.status === 400 &&
+        err.response.data?.error &&
+        err.response.data.error.toLowerCase().includes("already") &&
+        err.response.data.error.toLowerCase().includes("saved")
+      ) {
+        toast.warning("You’ve already added this book to your collection.");
+      } else {
+        toast.error("Failed to add book. Please try again.");
+      }
     }
   };
 
@@ -70,20 +77,28 @@ const SearchPage: React.FC = () => {
       <h1 className="text-3xl font-bold mb-6 text-center">Search for Books</h1>
 
       <div className="flex flex-wrap gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Title"
-          className="border p-2 flex-1 rounded"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Author"
-          className="border p-2 flex-1 rounded"
-          value={author}
-          onChange={(e) => setAuthor(e.target.value)}
-        />
+        <div className="flex flex-col w-full max-w-md">
+
+          <label className="mb-1 text-sm font-medium text-gray-700">Title</label>
+          <input
+            type="text"
+            placeholder="Example: Lord of the rings"
+            className="border p-2 flex-1 rounded"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col w-full max-w-md">
+
+          <label className="mb-1 text-sm font-medium text-gray-700">Author</label>
+          <input
+            type="text"
+            placeholder="Example: J.K. Rowling"
+            className="border p-2 flex-1 rounded"
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+          />
+        </div>
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
           onClick={handleSearch}
@@ -94,7 +109,7 @@ const SearchPage: React.FC = () => {
       </div>
 
       <p className="text-sm text-gray-500 mb-6 text-center">
-        🔍 Use title, author or subject to find books from Google Books.
+        Use title, author or subject to find books from Google Books.
       </p>
 
       {loading && (
@@ -117,10 +132,14 @@ const SearchPage: React.FC = () => {
               <img
                 src={book.thumbnailUrl}
                 alt={book.title}
-                className="w-full aspect-[2/3] object-cover rounded mb-4 shadow"
+                // CLASSE ATUALIZADA AQUI
+                className="w-full h-56 object-contain rounded-lg shadow mb-3"
               />
             ) : (
-              <div className="w-full aspect-[2/3] bg-gray-200 rounded mb-4 flex items-center justify-center text-gray-500">
+              <div
+                // CLASSE ATUALIZADA AQUI
+                className="w-full h-56 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-500"
+              >
                 No Image
               </div>
             )}

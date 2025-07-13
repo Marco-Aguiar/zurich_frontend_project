@@ -48,7 +48,6 @@ const PricePage: React.FC = () => {
         saleability: data.saleability,
       });
     } catch (error: any) {
-      console.error("Error fetching price:", error);
       const message =
         error?.response?.data?.error ||
         "❌ Could not find price for the given ISBN. Please try again later.";

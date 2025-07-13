@@ -7,16 +7,20 @@ interface BookGroupProps {
   status: BookStatus;
   books: Book[];
   onStatusChange: (bookId: string, newStatus: BookStatus) => void;
+  onRemoveBook: (bookId: string) => void;
   getStatusColor: (status: BookStatus) => string;
   allStatuses: BookStatus[];
+  onCardClick: (book: Book) => void;
 }
 
 const BookGroup: React.FC<BookGroupProps> = ({
   status,
   books,
   onStatusChange,
+  onRemoveBook,
   getStatusColor,
   allStatuses,
+  onCardClick,
 }) => {
   return (
     <section className="bg-white p-6 rounded-lg shadow-xl border border-gray-200">
@@ -31,6 +35,8 @@ const BookGroup: React.FC<BookGroupProps> = ({
             allStatuses={allStatuses}
             getStatusColor={getStatusColor}
             onStatusChange={(newStatus) => onStatusChange(book.id, newStatus)}
+            onRemoveBook={() => onRemoveBook(book.id)}
+            onClick={() => onCardClick(book)}
           />
         ))}
       </div>
