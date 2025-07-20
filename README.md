@@ -76,31 +76,31 @@ Access the application at http://localhost:3000
 ---
 
 ### 🔐 Authentication
-* **Users must log in before performing any book operations.
-* **JWT is stored in localStorage and used automatically in authenticated requests.
+* Users must log in before performing any book operations.
+* JWT is stored in localStorage and used automatically in authenticated requests.
 
 
 ---
 
 ### 🌱 Future Improvements
 
-* **📊 Reading Tracker – Monitor your percentage read per book.
-* **👥 Co-Reading – Connect with other users and view their collections.
-* **📈 Stats Dashboard – See charts about your reading behavior over time.
+* 📊 Reading Tracker – Monitor your percentage read per book.
+* 👥 Co-Reading – Connect with other users and view their collections.
+* 📈 Stats Dashboard – See charts about your reading behavior over time.
 
 ---
 
 ### 🧪 Backend Integration
 
-* **This frontend connects directly to the Book Reader Backend via RESTful API.
-* **Make sure to clone and run the backend locally for full functionality.
+* This frontend connects directly to the Book Reader Backend via RESTful API.
+* Make sure to clone and run the backend locally for full functionality.
 
 ---
 
 ### 🤝 Contributing
 
-Contributions are welcome! Feel free to:<br>
-Fork the repository<br>
-Create a feature branch<br>
-Commit and push your code<br>
-Open a pull request
+*Contributions are welcome! Feel free to:<br>
+*Fork the repository<br>
+*Create a feature branch<br>
+*Commit and push your code<br>
+*Open a pull request
