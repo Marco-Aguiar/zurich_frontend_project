@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { registerUser } from "../services/UserService";
+import { useRegisterUser } from "../hooks/user/useRegisterUser";
 
 const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState("");
@@ -10,31 +10,35 @@ const RegisterPage: React.FC = () => {
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
+  const { mutate: registerUser, isPending } = useRegisterUser();
 
-  const handleRegister = async (e: React.FormEvent) => {
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    try {
-      await registerUser(username, email, password);
-
-      toast.success("Account registered!");
-      setTimeout(() => navigate("/"), 2000);
-    } catch (err: any) {
-      if (err.response && err.response.status === 400 && err.response.data) {
-        const data = err.response.data;
-
-        if (data.password) {
-          setError(data.password);
-        } else if (data.error) {
-          setError(data.error);
-        } else {
-          setError("Registration failed due to validation error.");
-        }
-      } else {
-        setError("An unexpected error occurred. Please try again.");
+    registerUser(
+      { username, email, password },
+      {
+        onSuccess: () => {
+          toast.success("Account registered!");
+          setTimeout(() => navigate("/"), 2000);
+        },
+        onError: (err: any) => {
+          if (err.response?.status === 400 && err.response?.data) {
+            const data = err.response.data;
+            if (data.password) {
+              setError(data.password);
+            } else if (data.error) {
+              setError(data.error);
+            } else {
+              setError("Registration failed due to validation error.");
+            }
+          } else {
+            setError("An unexpected error occurred. Please try again.");
+          }
+        },
       }
-    }
+    );
   };
 
   return (
@@ -55,6 +59,7 @@ const RegisterPage: React.FC = () => {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            disabled={isPending}
           />
         </div>
 
@@ -66,6 +71,7 @@ const RegisterPage: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isPending}
           />
         </div>
 
@@ -77,14 +83,16 @@ const RegisterPage: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isPending}
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+          disabled={isPending}
+          className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition disabled:opacity-50"
         >
-          Register
+          {isPending ? "Registering..." : "Register"}
         </button>
 
         <p className="mt-4 text-center text-sm">

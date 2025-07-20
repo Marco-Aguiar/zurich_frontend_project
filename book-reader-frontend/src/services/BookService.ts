@@ -18,7 +18,7 @@ export const addToCollection = async (
   bookData: {
     googleBookId: string;
     title: string;
-    subject: string;
+    subject: string[];
     authors: string[];
     thumbnailUrl: string;
     averageRating?: number | null;
@@ -41,7 +41,7 @@ export const removeBook = async (token: string, bookId: string): Promise<void> =
   });
   
   if (response.status !== 204 && response.status !== 200) {
-      throw new Error("Failed to delete book: Unexpected status code.");
+    throw new Error("Failed to delete book: Unexpected status code.");
   }
 };
 
@@ -86,8 +86,8 @@ export const updateBookStatus = async (
       Authorization: `Bearer ${token}`,
     },
     params: {
-      status: newStatus
-    }
+      status: newStatus,
+    },
   });
 
   return response.data;

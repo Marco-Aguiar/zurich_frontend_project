@@ -1,116 +1,103 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import {
-  addToCollection,
-  getRecommendations,
-  getBookDetails,
-} from "../services/BookService";
 import { LightBulbIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import { useRecommendations } from "../hooks/books/useRecommendations";
+import { useAddToCollection } from "../hooks/books/useAddToCollection";
+import { getBookDetails } from "../services/BookService";
 import BookDetailModal from "../components/BookDetailModal";
+import { useBookModalStore } from "../store/bookModalStore";
 
 const CATEGORY_OPTIONS = [
-  "Art",
-  "Children",
-  "Drama",
-  "Education",
-  "Fiction",
-  "History",
-  "Medical",
-  "Philosophy",
-  "Religion",
-  "Science",
-  "Travel",
+  "Art", "Children", "Drama", "Education", "Fiction", "History",
+  "Medical", "Philosophy", "Religion", "Science", "Travel",
 ];
 
 const RecommendationsPage: React.FC = () => {
+  const token = localStorage.getItem("token");
   const [title, setTitle] = useState("");
   const [subject, setSubject] = useState("");
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searchTriggered, setSearchTriggered] = useState(false);
-  const [selectedBook, setSelectedBook] = useState<any | null>(null);
+  const [queryParams, setQueryParams] = useState({ title: "", subject: "" });
 
-  const handleRecommend = async () => {
+  const {
+    data: recommendations = [],
+    isFetching,
+    refetch,
+  } = useRecommendations(token!, queryParams, searchTriggered);
+
+  const { mutate: addBookToCollection } = useAddToCollection(token!);
+  const { selectedBook, openBook, closeBook } = useBookModalStore();
+
+  const handleRecommend = () => {
     if (!title.trim() && !subject.trim()) {
       toast.warn("Please enter a title or a subject.");
-      setRecommendations([]);
-      setSearchTriggered(false);
       return;
     }
-
-    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("You are not authenticated.");
       return;
     }
-
     setSearchTriggered(true);
-    setLoading(true);
-    setRecommendations([]);
-
-    try {
-      const data = await getRecommendations(token, { title, subject });
-      const formattedResults = data.map((book: any) => ({
-        ...book,
-        subject: book.categories?.[0] || "Unknown",
-      }));
-      setRecommendations(formattedResults);
-    } catch (err) {
-      toast.error("Something went wrong. Try again.");
-    } finally {
-      setLoading(false);
-    }
+    setQueryParams({ title, subject });
+    refetch();
   };
 
-  const handleAddToCollection = async (book: any) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      toast.error("You are not authenticated.");
-      return;
-    }
-
-    try {
-      await addToCollection(token, {
+  const handleAddToCollection = (book: any) => {
+    addBookToCollection(
+      {
         googleBookId: book.id,
         title: book.title,
         authors: book.authors || ["Unknown Author"],
-        subject: book.subject || "Unknown",
+        subject: Array.isArray(book.subject)
+          ? book.subject
+          : book.subject
+          ? [book.subject]
+          : book.categories?.length
+          ? book.categories
+          : ["Unknown"],
         thumbnailUrl: book.thumbnailUrl || "",
         averageRating: book.averageRating || null,
         status: "PLAN_TO_READ",
-      });
-      toast.success("📚 Book added to your collection!");
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const errorMessage = err?.response?.data?.error;
-
-      if (
-        status === 400 &&
-        errorMessage?.toLowerCase().includes("already") &&
-        errorMessage?.toLowerCase().includes("saved")
-      ) {
-        toast.warn("You’ve already added this book to your collection.");
-      } else {
-        toast.error(errorMessage || "Failed to add book. Please try again.");
+      },
+      {
+        onSuccess: () => {
+          toast.success("📚 Book added to your collection!");
+        },
+        onError: (err: any) => {
+          const status = err?.response?.status;
+          const message = err?.response?.data?.error;
+          if (
+            status === 400 &&
+            message?.toLowerCase().includes("already") &&
+            message?.toLowerCase().includes("saved")
+          ) {
+            toast.warn("You’ve already added this book to your collection.");
+          } else {
+            toast.error(message || "Failed to add book. Please try again.");
+          }
+        },
       }
-    }
+    );
   };
 
   const handleCardClick = async (book: any) => {
-    const token = localStorage.getItem("token");
     if (!token) {
       toast.error("You are not authenticated.");
       return;
     }
-
     try {
       const details = await getBookDetails(token, book.id);
-      setSelectedBook({ ...book, ...details });
-    } catch (err) {
+      openBook({ ...book, ...details });
+    } catch {
       toast.error("Failed to load book details.");
-      setSelectedBook(book);
+      openBook(book);
     }
   };
+
+  const formattedRecommendations = recommendations.map((book: any) => ({
+    ...book,
+    subject: book.subject || book.categories?.[0] || "Unknown",
+  }));
 
   return (
     <div className="max-w-6xl mx-auto p-4 min-h-screen bg-gray-50">
@@ -121,9 +108,7 @@ const RecommendationsPage: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row sm:items-end sm:gap-4 gap-4 justify-center mb-6">
         <div className="flex flex-col w-full max-w-md">
-          <label htmlFor="title-recommendation" className="mb-1 text-sm font-medium text-gray-800">
-            Title
-          </label>
+          <label htmlFor="title-recommendation" className="mb-1 text-sm font-medium text-gray-800">Title</label>
           <input
             id="title-recommendation"
             type="text"
@@ -131,42 +116,31 @@ const RecommendationsPage: React.FC = () => {
             className="border p-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter") handleRecommend();
-            }}
+            onKeyDown={(e) => e.key === "Enter" && handleRecommend()}
           />
         </div>
 
         <div className="flex flex-col w-full max-w-md">
-          <label htmlFor="subject-recommendation" className="mb-1 text-sm font-medium text-gray-800">
-            Subject
-          </label>
-          <div className="relative w-full">
-            <select
-              id="subject-recommendation"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              className="w-full border p-2 rounded-md shadow-sm bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="">-- Select a subject --</option>
-              {CATEGORY_OPTIONS.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-              ▼
-            </div>
-          </div>
+          <label htmlFor="subject-recommendation" className="mb-1 text-sm font-medium text-gray-800">Genre</label>
+          <select
+            id="subject-recommendation"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            className="w-full border p-2 rounded-md shadow-sm bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+          >
+            <option value="">-- Select a genre --</option>
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
         </div>
 
         <button
-          className="bg-purple-500 text-white px-6 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition w-full sm:w-auto"
           onClick={handleRecommend}
-          disabled={loading}
+          disabled={isFetching}
+          className="bg-purple-500 text-white px-6 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition w-full sm:w-auto"
         >
-          {loading ? "Searching..." : "Get Recommendations"}
+          {isFetching ? "Searching..." : "Get Recommendations"}
         </button>
       </div>
 
@@ -174,11 +148,11 @@ const RecommendationsPage: React.FC = () => {
         Enter a <strong>title</strong> or select a <strong>subject</strong> to receive personalized book recommendations.
       </p>
 
-      {loading && (
+      {isFetching && (
         <p className="text-center text-gray-500 py-8">Searching for recommendations...</p>
       )}
 
-      {!loading && !searchTriggered && recommendations.length === 0 && (
+      {!isFetching && !searchTriggered && formattedRecommendations.length === 0 && (
         <div className="text-center text-gray-600 py-12">
           <div className="mb-8 flex justify-center">
             <LightBulbIcon className="h-24 w-24 text-purple-400" />
@@ -187,27 +161,10 @@ const RecommendationsPage: React.FC = () => {
           <p className="text-base text-gray-700 mb-6">
             Get personalized book recommendations based on your interests!
           </p>
-          <div className="mt-8 max-w-lg mx-auto text-left">
-            <h3 className="text-lg font-semibold mb-4 text-gray-700 text-center">How to get recommendations:</h3>
-            <ul className="list-inside list-none space-y-3">
-              <li className="flex items-start">
-                <span className="flex-shrink-0 bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full mr-3 mt-0.5">1</span>
-                <p className="text-base text-gray-600">Enter a specific book title you enjoyed.</p>
-              </li>
-              <li className="flex items-start">
-                <span className="flex-shrink-0 bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full mr-3 mt-0.5">2</span>
-                <p className="text-base text-gray-600">Or, select a subject you're interested in.</p>
-              </li>
-              <li className="flex items-start">
-                <span className="flex-shrink-0 bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full mr-3 mt-0.5">3</span>
-                <p className="text-base text-gray-600">Click "Get Recommendations" to discover new books!</p>
-              </li>
-            </ul>
-          </div>
         </div>
       )}
 
-      {!loading && searchTriggered && recommendations.length === 0 && (
+      {!isFetching && searchTriggered && formattedRecommendations.length === 0 && (
         <div className="text-center text-gray-600 py-8">
           <svg className="mx-auto h-20 w-20 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -217,9 +174,9 @@ const RecommendationsPage: React.FC = () => {
         </div>
       )}
 
-      {!loading && recommendations.length > 0 && (
+      {!isFetching && formattedRecommendations.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {recommendations.map((book) => (
+          {formattedRecommendations.map((book: any) => (
             <div
               key={book.id}
               onClick={() => handleCardClick(book)}
@@ -246,7 +203,8 @@ const RecommendationsPage: React.FC = () => {
                   : "Unknown Author"}
               </p>
               <p className="text-sm text-gray-500 w-full">
-                <strong>Subject:</strong> {book.subject}
+                <strong>Genre:</strong>{" "}
+                {Array.isArray(book.subject) ? book.subject.join(", ") : book.subject}
               </p>
 
               {typeof book.averageRating === "number" && !isNaN(book.averageRating) && (
@@ -274,7 +232,7 @@ const RecommendationsPage: React.FC = () => {
       )}
 
       {selectedBook && (
-        <BookDetailModal book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <BookDetailModal book={selectedBook} onClose={closeBook} />
       )}
     </div>
   );

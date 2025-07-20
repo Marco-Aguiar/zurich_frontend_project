@@ -1,24 +1,31 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { login } from "../services/AuthService";
+import { useLogin } from "../hooks/auth/useLogin";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const { token } = await login(email, password);
-      localStorage.setItem("token", token);
+  const { mutate: loginUser, isPending } = useLogin();
 
-      toast.success("Welcome back!");
-      setTimeout(() => navigate("/home"), 2000);
-    } catch (err: any) {
-      toast.error("Invalid credentials.");
-    }
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    loginUser(
+      { email, password },
+      {
+        onSuccess: ({ token }) => {
+          localStorage.setItem("token", token);
+          toast.success("Welcome back!");
+          setTimeout(() => navigate("/home"), 2000);
+        },
+        onError: () => {
+          toast.error("Invalid credentials.");
+        },
+      }
+    );
   };
 
   return (
@@ -37,6 +44,7 @@ const LoginPage: React.FC = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isPending}
           />
         </div>
 
@@ -48,14 +56,16 @@ const LoginPage: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            disabled={isPending}
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
+          disabled={isPending}
         >
-          Login
+          {isPending ? "Logging in..." : "Login"}
         </button>
 
         <p className="mt-4 text-center text-sm">

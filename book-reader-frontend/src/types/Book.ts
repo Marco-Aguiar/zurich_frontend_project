@@ -11,7 +11,7 @@ export interface Book {
   title: string;
   authors: string[];
   thumbnailUrl?: string;
-  subject?: string;
+  subject?: string[];
   status: BookStatus;
   googleBookId?: string;
   averageRating?: number;
