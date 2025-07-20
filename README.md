@@ -1,46 +1,58 @@
-# Getting Started with Create React App
+📚 Book Reader – Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A user-friendly React application that allows users to search, view, and manage their personal book collection using the Google Books API.
 
-## Available Scripts
+🚀 Getting Started
 
-In the project directory, you can run:
+📦 Install Dependencies
+npm install
+▶️ Run in Development Mode
+npm start
+The app will start on http://localhost:3000.
+Hot reloading is enabled, so changes will automatically reflect in the browser.
+Any linting issues will be shown in the console.
 
-### `npm start`
+🛠️ Project Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+React + TypeScript
+TailwindCSS for styling
+React Query for data fetching and caching
+Zustand for local state management (modals, selected books)
+React Router for page navigation
+Toastify for notifications
+🔐 Authentication
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+This frontend relies on JWT-based authentication.
+You must be logged in to search and manage books. The token is stored in localStorage and attached to every API request.
 
-### `npm test`
+🔍 Features
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+🔎 Search books by title and/or author
+📚 View book details (description, authors, rating, categories)
+💾 Add books to your personal collection
+📖 Organize books by reading status (Plan to Read, Reading, Read, Dropped)
+⭐ View and manage recommendations
+🌙 Responsive layout and optimized UX
+🌐 Environment Variables
 
-### `npm run build`
+Create a .env file in the root of the project with the following variables:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+REACT_APP_API_URL=http://localhost:8080
+You can change this URL to point to your deployed backend server.
+Make sure it matches the origin accepted by your backend CORS configuration.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+🖼️ Screenshots
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Here’s a preview of the book collection in action:
 
-### `npm run eject`
+<img src="./public/imagesServer/bookCollection.png" width="100%" alt="Book Collection" />
+🤝 Contributing
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Contributions are welcome!
+To propose improvements, report issues, or submit a feature, please:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+Fork this repository
+Create your feature branch (git checkout -b feature/your-feature)
+Commit your changes (git commit -m 'Add some feature')
+Push to the branch (git push origin feature/your-feature)
+Open a pull request
