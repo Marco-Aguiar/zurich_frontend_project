@@ -1,4 +1,3 @@
-// components/BookDetailModal.tsx
 import React from "react";
 import { Book } from "../types/Book";
 
@@ -25,7 +24,7 @@ const BookDetailModal: React.FC<BookDetailModalProps> = ({ book, onClose }) => {
             <img
               src={book.thumbnailUrl}
               alt={book.title}
-              className="w-40 h-auto rounded-lg shadow"
+              className="max-w-[160px] max-h-[240px] object-contain rounded-lg shadow"
             />
           )}
           <div className="flex-1">

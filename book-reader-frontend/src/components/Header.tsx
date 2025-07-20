@@ -1,12 +1,13 @@
 import React from "react";
 import { useNavigate, NavLink } from "react-router-dom";
+import { BookOpenIcon } from '@heroicons/react/24/outline';
 
 const Header: React.FC = () => {
     const navigate = useNavigate();
 
     const handleLogout = () => {
         localStorage.removeItem("token");
-        navigate("/login");
+        navigate("/");
     };
 
     const navClass = ({ isActive }: { isActive: boolean }) =>
@@ -17,12 +18,13 @@ const Header: React.FC = () => {
     return (
         <header className="bg-white shadow sticky top-0 z-50">
             <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
-                <NavLink to="/" className="text-xl font-bold text-blue-600">
-                    📚 BookReader
+                <NavLink to="/home" className="flex items-center text-xl font-bold text-blue-600">
+                    <BookOpenIcon className="h-6 w-6 mr-2" /> 
+                    BookReader
                 </NavLink>
 
                 <nav className="flex space-x-4">
-                    <NavLink to="/" className={navClass}>Home</NavLink>
+                    <NavLink to="/home" className={navClass}>Home</NavLink>
                     <NavLink to="/search" className={navClass}>Search</NavLink>
                     <NavLink to="/recommendations" className={navClass}>Recommendations</NavLink>
                 </nav>

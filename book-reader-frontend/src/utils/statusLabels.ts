@@ -8,3 +8,16 @@ export const statusLabels: Record<BookStatus, string> = {
   DROPPED: "Dropped",
   RECOMMENDED: "Recommended",
 };
+
+export const STATUS_ORDER: BookStatus[] = [
+  "PLAN_TO_READ",
+  "READING",
+  "PAUSED",
+  "READ",
+  "DROPPED",
+  "RECOMMENDED",
+];
+
+export const ALL_POSSIBLE_STATUSES: BookStatus[] = Object.keys(
+  statusLabels
+) as BookStatus[];

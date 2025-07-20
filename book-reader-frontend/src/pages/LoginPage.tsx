@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { toast } from "react-toastify";
+import { login } from "../services/AuthService";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -11,18 +11,13 @@ const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await axios.post("http://localhost:8080/api/auth/login", {
-        email,
-        password,
-      });
-
-      const { token } = response.data;
+      const { token } = await login(email, password);
       localStorage.setItem("token", token);
 
       toast.success("Welcome back!");
-      setTimeout(() => navigate("/"), 2000);
+      setTimeout(() => navigate("/home"), 2000);
     } catch (err: any) {
-      toast.error("Invalid credentials or server error.");
+      toast.error("Invalid credentials.");
     }
   };
 

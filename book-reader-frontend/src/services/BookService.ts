@@ -1,10 +1,11 @@
 import axios from "axios";
 import { Book, BookStatus } from "../types/Book";
+import { API_BASE_URL } from "../config/apiConfig";
 
-const BASE_URL = "http://localhost:8080/api";
+const baseURL = API_BASE_URL;
 
 export const getAllBooks = async (token: string): Promise<Book[]> => {
-  const response = await axios.get(`${BASE_URL}/book-entries`, {
+  const response = await axios.get(`${baseURL}/book-entries`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -24,7 +25,7 @@ export const addToCollection = async (
     status: string;
   }
 ) => {
-  const response = await axios.post(`${BASE_URL}/book-entries`, bookData, {
+  const response = await axios.post(`${baseURL}/book-entries`, bookData, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -33,7 +34,7 @@ export const addToCollection = async (
 };
 
 export const removeBook = async (token: string, bookId: string): Promise<void> => {
-  const response = await axios.delete(`${BASE_URL}/book-entries/${bookId}`, {
+  const response = await axios.delete(`${baseURL}/book-entries/${bookId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -46,7 +47,7 @@ export const removeBook = async (token: string, bookId: string): Promise<void> =
 
 export const getBookDetails = async (token: string, googleBookId: string): Promise<any> => {
   try {
-    const response = await axios.get(`${BASE_URL}/external/books/${googleBookId}`, {
+    const response = await axios.get(`${baseURL}/external/books/${googleBookId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -67,7 +68,7 @@ export const searchBooks = async (
   if (filters.author) params.append("author", filters.author);
   if (filters.subject) params.append("subject", filters.subject);
 
-  const response = await axios.get(`${BASE_URL}/external/books/search?${params.toString()}`, {
+  const response = await axios.get(`${baseURL}/external/books/search?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -80,7 +81,7 @@ export const updateBookStatus = async (
   bookId: string,
   newStatus: BookStatus
 ): Promise<Book> => {
-  const response = await axios.patch(`${BASE_URL}/book-entries/${bookId}/status`, null, {
+  const response = await axios.patch(`${baseURL}/book-entries/${bookId}/status`, null, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -92,22 +93,22 @@ export const updateBookStatus = async (
   return response.data;
 };
 
-export const getBookPrice = async (
+export const getRecommendations = async (
   token: string,
-  isbn: string,
-  country: string
-): Promise<{
-  saleability: string;
-  listPrice?: { amount: number; currencyCode: string };
-  retailPrice?: { amount: number; currencyCode: string };
-  buyLink?: string;
-}> => {
-  const response = await axios.get(`${BASE_URL}/external/books/price`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    params: { isbn, country },
-  });
+  filters: { title?: string; subject?: string }
+): Promise<any[]> => {
+  const params = new URLSearchParams();
+  if (filters.title) params.append("title", filters.title);
+  if (filters.subject) params.append("subject", filters.subject);
+
+  const response = await axios.get(
+    `${baseURL}/external/books/recommendations?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   return response.data;
 };

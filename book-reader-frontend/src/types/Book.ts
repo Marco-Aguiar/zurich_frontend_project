@@ -16,8 +16,6 @@ export interface Book {
   googleBookId?: string;
   averageRating?: number;
   ratingsCount?: number;
-
-  // Novos campos para o modal de detalhes
   description?: string;
   publisher?: string;
   publishedDate?: string;

@@ -1,36 +1,33 @@
-// pages/HomePage.tsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Book, BookStatus } from "../types/Book";
-import { getAllBooks, updateBookStatus, removeBook, getBookDetails } from "../services/BookService";
+import {
+  getAllBooks,
+  updateBookStatus,
+  removeBook,
+  getBookDetails,
+} from "../services/BookService";
 import { toast } from "react-toastify";
 import BookGroup from "../components/BookGroup";
-import { statusLabels } from "../utils/statusLabels";
+import {
+  statusLabels,
+  STATUS_ORDER,
+  ALL_POSSIBLE_STATUSES,
+} from "../utils/statusLabels";
 import BookDetailModal from "../components/BookDetailModal";
-
-const STATUS_ORDER: BookStatus[] = [
-  "PLAN_TO_READ",
-  "READING",
-  "PAUSED",
-  "READ",
-  "DROPPED",
-  "RECOMMENDED",
-];
-
-const ALL_POSSIBLE_STATUSES: BookStatus[] = Object.keys(statusLabels) as BookStatus[];
+import { getUserProfile } from "../services/UserService";
 
 const HomePage: React.FC = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [username, setUsername] = useState<string>("Reader");
+
   const navigate = useNavigate();
 
   const fetchBooks = async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
+    if (!token) return;
 
     try {
       setLoading(true);
@@ -40,7 +37,7 @@ const HomePage: React.FC = () => {
       if (error.response?.status === 401) {
         localStorage.removeItem("token");
         toast.error("Your session expired. Please log in again.");
-        navigate("/login");
+        navigate("/");
       } else {
         toast.error("Failed to load books. Please try again later.");
       }
@@ -49,19 +46,42 @@ const HomePage: React.FC = () => {
     }
   };
 
+  const fetchUserProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const profile = await getUserProfile(token);
+      setUsername(profile.username);
+    } catch {
+      setUsername("Reader");
+    }
+  };
+
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     fetchBooks();
-  }, [navigate]);
+    fetchUserProfile();
+  }, []);
 
   const getStatusColor = (status: BookStatus) => {
     switch (status) {
-      case "READ": return "bg-green-200 text-green-800";
-      case "PLAN_TO_READ": return "bg-blue-200 text-blue-800";
-      case "READING": return "bg-yellow-200 text-yellow-800";
-      case "PAUSED": return "bg-orange-200 text-orange-800";
-      case "DROPPED": return "bg-red-200 text-red-800";
-      case "RECOMMENDED": return "bg-pink-200 text-pink-800";
-      default: return "bg-gray-200 text-gray-800";
+      case "READ":
+        return "bg-green-200 text-green-800";
+      case "PLAN_TO_READ":
+        return "bg-blue-200 text-blue-800";
+      case "READING":
+        return "bg-yellow-200 text-yellow-800";
+      case "PAUSED":
+        return "bg-orange-200 text-orange-800";
+      case "DROPPED":
+        return "bg-red-200 text-red-800";
+      case "RECOMMENDED":
+        return "bg-pink-200 text-pink-800";
+      default:
+        return "bg-gray-200 text-gray-800";
     }
   };
 
@@ -69,13 +89,15 @@ const HomePage: React.FC = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("You are not authenticated.");
-      navigate("/login");
+      navigate("/");
       return;
     }
 
     const originalBooks = [...books];
-    setBooks(prevBooks =>
-      prevBooks.map(book => book.id === bookId ? { ...book, status: newStatus } : book)
+    setBooks((prevBooks) =>
+      prevBooks.map((book) =>
+        book.id === bookId ? { ...book, status: newStatus } : book
+      )
     );
 
     try {
@@ -83,8 +105,7 @@ const HomePage: React.FC = () => {
       toast.success(`Book status updated to ${statusLabels[newStatus]}!`);
       fetchBooks();
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Please try again.";
-      toast.error(`Failed to update status: ${errorMessage}`);
+      toast.error(`Failed to update status: ${error.message}`);
       setBooks(originalBooks);
     }
   };
@@ -93,7 +114,7 @@ const HomePage: React.FC = () => {
     const token = localStorage.getItem("token");
     if (!token) {
       toast.error("You are not authenticated.");
-      navigate("/login");
+      navigate("/");
       return;
     }
 
@@ -102,14 +123,13 @@ const HomePage: React.FC = () => {
     }
 
     const originalBooks = [...books];
-    setBooks(prevBooks => prevBooks.filter(book => book.id !== bookId));
+    setBooks((prevBooks) => prevBooks.filter((book) => book.id !== bookId));
 
     try {
       await removeBook(token, bookId);
       toast.success("Book removed from your collection!");
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || "Please try again.";
-      toast.error(`Failed to remove book: ${errorMessage}`);
+      toast.error(`Failed to remove book: ${error.message}`);
       setBooks(originalBooks);
     }
   };
@@ -117,13 +137,13 @@ const HomePage: React.FC = () => {
   const handleCardClick = async (book: Book) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      toast.error("Você precisa estar logado.");
-      navigate("/login");
+      toast.error("You need to be logged in.");
+      navigate("/");
       return;
     }
 
     if (!book.googleBookId) {
-      toast.error("ID do livro não disponível para carregar detalhes.");
+      toast.error("Book ID not available to load details.");
       setSelectedBook(book);
       return;
     }
@@ -133,7 +153,7 @@ const HomePage: React.FC = () => {
       const detailedBook = { ...book, ...details };
       setSelectedBook(detailedBook);
     } catch (error: any) {
-      toast.error(error.message || "Erro ao carregar detalhes do livro.");
+      toast.error(error.message || "Error loading book details.");
       setSelectedBook(book);
     }
   };
@@ -151,31 +171,54 @@ const HomePage: React.FC = () => {
     return acc;
   }, {} as Record<BookStatus, Book[]>);
 
-  const hasDisplayableBooks = Object.values(groupedBooks).some(arr => arr.length > 0);
+  const hasDisplayableBooks = Object.values(groupedBooks).some(
+    (arr) => arr.length > 0
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="w-full max-w-[80%] mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-center">My Book Collection</h1>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
+          <div>
+            <h2 className="text-xl font-semibold">
+              Welcome back, <span className="text-blue-600">{username}</span> 👋
+            </h2>
+            <p className="text-sm text-gray-500">Ready to dive into another book?</p>
+          </div>
+        </div>
+
+        <h1 className="text-3xl font-bold mb-8 text-center mt-2">My Book Collection</h1>
 
         {loading ? (
           <p className="text-center text-gray-600">Loading your books...</p>
         ) : !hasDisplayableBooks ? (
-          <div className="text-center text-gray-600 py-8">
-            <p className="text-xl font-semibold mb-2">Welcome to Book Reader!</p>
-            <p className="text-lg mb-1">Discover your next favorite book.</p>
-            <p className="text-md">Track your reading progress, manage wishlists, and add comments to your books.</p>
-            <p className="text-md mt-4">
-              Start by{" "}
-              <button
-                onClick={() => navigate("/search")}
-                className="text-blue-600 font-semibold focus:outline-none cursor-pointer"
-                style={{ textDecoration: "none" }}
-              >
-                Searching
-              </button>{" "}
-              for books and adding them to your collection!
+          <div className="text-center text-gray-600 pt-12 pb-12">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Your collection is empty!</h2>
+            <p className="text-base text-gray-700 mb-8">
+              Let's fill your virtual bookshelf with amazing reads.
             </p>
+
+            <button
+              onClick={() => navigate("/search")}
+              className="inline-flex items-center px-5 py-2.5 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition"
+            >
+              <svg className="-ml-1 mr-2.5 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+              Start Adding Your First Book!
+            </button>
+
+            <div className="mt-12 max-w-lg mx-auto text-left">
+              <h3 className="text-lg font-semibold mb-4 text-gray-700 text-center">How to get started:</h3>
+              <ul className="list-inside list-none space-y-3">
+                {["Click the button above", "Search by title or author", "Add books to your list"].map((text, i) => (
+                  <li className="flex items-start" key={i}>
+                    <span className="flex-shrink-0 bg-blue-100 text-blue-800 text-sm font-semibold px-2.5 py-0.5 rounded-full mr-3 mt-0.5">{i + 1}</span>
+                    <p className="text-base text-gray-600">{text}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         ) : (
           <div className="space-y-10">
@@ -200,10 +243,7 @@ const HomePage: React.FC = () => {
         )}
 
         {selectedBook && (
-          <BookDetailModal
-            book={selectedBook}
-            onClose={() => setSelectedBook(null)}
-          />
+          <BookDetailModal book={selectedBook} onClose={() => setSelectedBook(null)} />
         )}
       </div>
     </div>

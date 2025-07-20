@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
-import { addToCollection } from "../services/BookService";
+import {
+  addToCollection,
+  getRecommendations,
+  getBookDetails,
+} from "../services/BookService";
+import { LightBulbIcon, SparklesIcon } from "@heroicons/react/24/outline";
+import BookDetailModal from "../components/BookDetailModal";
 
 const CATEGORY_OPTIONS = [
   "Art",
@@ -22,10 +28,13 @@ const RecommendationsPage: React.FC = () => {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTriggered, setSearchTriggered] = useState(false);
+  const [selectedBook, setSelectedBook] = useState<any | null>(null);
 
   const handleRecommend = async () => {
     if (!title.trim() && !subject.trim()) {
       toast.warn("Please enter a title or a subject.");
+      setRecommendations([]);
+      setSearchTriggered(false);
       return;
     }
 
@@ -35,34 +44,17 @@ const RecommendationsPage: React.FC = () => {
       return;
     }
 
+    setSearchTriggered(true);
+    setLoading(true);
+    setRecommendations([]);
+
     try {
-      setLoading(true);
-      setSearchTriggered(true);
-      setRecommendations([]);
-
-      const queryParams = new URLSearchParams();
-      if (title.trim()) queryParams.append("title", title.trim());
-      if (subject.trim()) queryParams.append("subject", subject.trim());
-
-      const response = await fetch(
-        `http://localhost:8080/api/external/books/recommendations?${queryParams.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const formattedResults = data.map((book: any) => ({
-          ...book,
-          subject: book.categories?.[0] || "Unknown",
-        }));
-        setRecommendations(formattedResults);
-      } else {
-        toast.error("Failed to get recommendations.");
-      }
+      const data = await getRecommendations(token, { title, subject });
+      const formattedResults = data.map((book: any) => ({
+        ...book,
+        subject: book.categories?.[0] || "Unknown",
+      }));
+      setRecommendations(formattedResults);
     } catch (err) {
       toast.error("Something went wrong. Try again.");
     } finally {
@@ -104,30 +96,54 @@ const RecommendationsPage: React.FC = () => {
     }
   };
 
+  const handleCardClick = async (book: any) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("You are not authenticated.");
+      return;
+    }
+
+    try {
+      const details = await getBookDetails(token, book.id);
+      setSelectedBook({ ...book, ...details });
+    } catch (err) {
+      toast.error("Failed to load book details.");
+      setSelectedBook(book);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto p-4 min-h-screen bg-gray-50">
-      <h1 className="text-3xl font-bold mb-4 text-center">📚 Book Recommendations</h1>
-
-      <p className="text-center text-gray-600 mb-6">
-        Enter a <strong>title</strong> or select a <strong>subject</strong> to receive personalized book recommendations.
-      </p>
+      <h1 className="text-3xl font-bold mb-6 text-center flex items-center justify-center">
+        <SparklesIcon className="h-8 w-8 inline-block mr-2 text-purple-600" />
+        Book Recommendations
+      </h1>
 
       <div className="flex flex-col sm:flex-row sm:items-end sm:gap-4 gap-4 justify-center mb-6">
         <div className="flex flex-col w-full max-w-md">
-          <label className="mb-1 text-sm font-medium text-gray-700">Title</label>
+          <label htmlFor="title-recommendation" className="mb-1 text-sm font-medium text-gray-800">
+            Title
+          </label>
           <input
+            id="title-recommendation"
             type="text"
             placeholder="Example: Trivium"
-            className="border p-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            className="border p-2 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter") handleRecommend();
+            }}
           />
         </div>
 
         <div className="flex flex-col w-full max-w-md">
-          <label className="mb-1 text-sm font-medium text-gray-700">Subject</label>
-          <div className="relative">
+          <label htmlFor="subject-recommendation" className="mb-1 text-sm font-medium text-gray-800">
+            Subject
+          </label>
+          <div className="relative w-full">
             <select
+              id="subject-recommendation"
               value={subject}
               onChange={(e) => setSubject(e.target.value)}
               className="w-full border p-2 rounded-md shadow-sm bg-white appearance-none focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -146,77 +162,120 @@ const RecommendationsPage: React.FC = () => {
         </div>
 
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition h-fit"
+          className="bg-purple-500 text-white px-6 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition w-full sm:w-auto"
           onClick={handleRecommend}
           disabled={loading}
         >
-          {loading ? "Searching..." : "Recommendations"}
+          {loading ? "Searching..." : "Get Recommendations"}
         </button>
       </div>
 
+      <p className="text-sm text-gray-500 mb-6 text-center">
+        Enter a <strong>title</strong> or select a <strong>subject</strong> to receive personalized book recommendations.
+      </p>
+
       {loading && (
-        <p className="text-center text-gray-500 py-4">Searching for recommendations...</p>
+        <p className="text-center text-gray-500 py-8">Searching for recommendations...</p>
+      )}
+
+      {!loading && !searchTriggered && recommendations.length === 0 && (
+        <div className="text-center text-gray-600 py-12">
+          <div className="mb-8 flex justify-center">
+            <LightBulbIcon className="h-24 w-24 text-purple-400" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3 text-gray-800">Looking for your next great read?</h2>
+          <p className="text-base text-gray-700 mb-6">
+            Get personalized book recommendations based on your interests!
+          </p>
+          <div className="mt-8 max-w-lg mx-auto text-left">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700 text-center">How to get recommendations:</h3>
+            <ul className="list-inside list-none space-y-3">
+              <li className="flex items-start">
+                <span className="flex-shrink-0 bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full mr-3 mt-0.5">1</span>
+                <p className="text-base text-gray-600">Enter a specific book title you enjoyed.</p>
+              </li>
+              <li className="flex items-start">
+                <span className="flex-shrink-0 bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full mr-3 mt-0.5">2</span>
+                <p className="text-base text-gray-600">Or, select a subject you're interested in.</p>
+              </li>
+              <li className="flex items-start">
+                <span className="flex-shrink-0 bg-purple-100 text-purple-800 text-sm font-semibold px-2.5 py-0.5 rounded-full mr-3 mt-0.5">3</span>
+                <p className="text-base text-gray-600">Click "Get Recommendations" to discover new books!</p>
+              </li>
+            </ul>
+          </div>
+        </div>
       )}
 
       {!loading && searchTriggered && recommendations.length === 0 && (
-        <p className="text-center text-gray-500 py-4">No recommendations found.</p>
+        <div className="text-center text-gray-600 py-8">
+          <svg className="mx-auto h-20 w-20 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-xl font-semibold mt-4 mb-2">No recommendations found.</p>
+          <p className="text-base">Try adjusting your title or subject!</p>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recommendations.map((book) => (
-          <div
-            key={book.id}
-            className="bg-white rounded-lg shadow-md p-4 flex flex-col items-center text-center"
-          >
-            {book.thumbnailUrl ? (
-              <img
-                src={book.thumbnailUrl}
-                alt={book.title}
-                // CLASSE ATUALIZADA AQUI
-                className="w-full h-56 object-contain rounded-lg shadow mb-3"
-              />
-            ) : (
-              <div
-                // CLASSE ATUALIZADA AQUI
-                className="w-full h-56 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-500"
-              >
-                No Image
-              </div>
-            )}
-
-            <h3 className="text-md font-semibold mb-1 truncate w-full">{book.title}</h3>
-            <p className="text-sm text-gray-600 truncate w-full">
-              {Array.isArray(book.authors)
-                ? book.authors.join(", ")
-                : typeof book.authors === "string"
-                ? book.authors
-                : "Unknown Author"}
-            </p>
-            <p className="text-sm text-gray-500 w-full">
-              <strong>Subject:</strong> {book.subject}
-            </p>
-
-            {typeof book.averageRating === "number" && !isNaN(book.averageRating) && (
-              <p className="text-sm text-yellow-600 font-semibold">
-                ⭐ {book.averageRating.toFixed(1)} / 5
-              </p>
-            )}
-
-            {typeof book.ratingsCount === "number" && book.ratingsCount > 0 && (
-              <p className="text-xs text-gray-500">
-                ({book.ratingsCount} ratings)
-              </p>
-            )}
-
-            <button
-              onClick={() => handleAddToCollection(book)}
-              className="bg-green-600 text-white px-4 py-1 rounded-md hover:bg-green-700 transition mt-2"
+      {!loading && recommendations.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {recommendations.map((book) => (
+            <div
+              key={book.id}
+              onClick={() => handleCardClick(book)}
+              className="cursor-pointer bg-white rounded-lg shadow-md p-4 flex flex-col items-center text-center transition hover:shadow-lg"
             >
-              Add to Collection
-            </button>
-          </div>
-        ))}
-      </div>
+              {book.thumbnailUrl ? (
+                <img
+                  src={book.thumbnailUrl}
+                  alt={book.title}
+                  className="w-full h-56 object-contain rounded-lg shadow mb-3"
+                />
+              ) : (
+                <div className="w-full h-56 bg-gray-200 rounded mb-3 flex items-center justify-center text-gray-500">
+                  No Image
+                </div>
+              )}
+
+              <h3 className="text-md font-semibold mb-1 truncate w-full">{book.title}</h3>
+              <p className="text-sm text-gray-600 truncate w-full">
+                {Array.isArray(book.authors)
+                  ? book.authors.join(", ")
+                  : typeof book.authors === "string"
+                  ? book.authors
+                  : "Unknown Author"}
+              </p>
+              <p className="text-sm text-gray-500 w-full">
+                <strong>Subject:</strong> {book.subject}
+              </p>
+
+              {typeof book.averageRating === "number" && !isNaN(book.averageRating) && (
+                <p className="text-sm text-yellow-600 font-semibold">
+                  ⭐ {book.averageRating.toFixed(1)} / 5
+                </p>
+              )}
+
+              {typeof book.ratingsCount === "number" && book.ratingsCount > 0 && (
+                <p className="text-xs text-gray-500">({book.ratingsCount} ratings)</p>
+              )}
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCollection(book);
+                }}
+                className="bg-green-600 text-white px-4 py-1 rounded-md hover:bg-green-700 transition mt-2"
+              >
+                Add to Collection
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {selectedBook && (
+        <BookDetailModal book={selectedBook} onClose={() => setSelectedBook(null)} />
+      )}
     </div>
   );
 };

@@ -1,13 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { toast } from "react-toastify";
+import { registerUser } from "../services/UserService";
 
 const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
   const [error, setError] = useState("");
 
   const navigate = useNavigate();
@@ -17,14 +16,10 @@ const RegisterPage: React.FC = () => {
     setError("");
 
     try {
-      await axios.post("http://localhost:8080/api/users", {
-        username,
-        email,
-        password,
-      });
+      await registerUser(username, email, password);
 
       toast.success("Account registered!");
-      setTimeout(() => navigate("/login"), 2000);
+      setTimeout(() => navigate("/"), 2000);
     } catch (err: any) {
       if (err.response && err.response.status === 400 && err.response.data) {
         const data = err.response.data;
@@ -96,7 +91,7 @@ const RegisterPage: React.FC = () => {
           Already have an account?{" "}
           <span
             className="text-blue-600 hover:underline cursor-pointer"
-            onClick={() => navigate("/login")}
+            onClick={() => navigate("/")}
           >
             Login
           </span>
