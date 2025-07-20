@@ -98,8 +98,7 @@ Access the application at http://localhost:3000
 ---
 
 ### 🤝 Contributing
-
-*Contributions are welcome! Feel free to:<br>
+Contributions are welcome! Feel free to:<br>
 *Fork the repository<br>
 *Create a feature branch<br>
 *Commit and push your code<br>
